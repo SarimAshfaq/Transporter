@@ -23,7 +23,7 @@ public class TPTask : NSObject {
         return !isCompleted
     }
     
-    public func progress(handler: ProgressHandler) -> Self {
+    public func progress(handler: @escaping ProgressHandler) -> Self {
         progressHandler = handler
         return self
     }

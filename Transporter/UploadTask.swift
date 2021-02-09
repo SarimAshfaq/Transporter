@@ -15,11 +15,11 @@ public enum UploadDataType {
 }
 
 public class UploadTask : TPTransferTask {
-    var task: NSURLSessionUploadTask?
+    var task: URLSessionUploadTask?
     var uploadDataType: UploadDataType = .File
     var file: NSURL?
     var data: NSData?
-    var stream: NSInputStream?
+    var stream: InputStream?
     
     public override init(url: String, params: [String: AnyObject]? = nil) {
         super.init(url: url, params: params)
@@ -38,15 +38,14 @@ public class UploadTask : TPTransferTask {
         uploadDataType = .File
         self.file = file
         
-        var error: NSError?
-        if let attr: NSDictionary = NSFileManager.defaultManager().attributesOfItemAtPath(file.path!, error: &error) {
+        if let attr: NSDictionary = try? FileManager.default.attributesOfItem(atPath: file.path!) as NSDictionary {
             if error == nil {
                 totalBytes = Int64(attr.fileSize())
             }
         }
     }
     
-    public convenience init(url: String, stream: NSInputStream) {
+    public convenience init(url: String, stream: InputStream) {
         self.init(url: url)
         uploadDataType = .Stream
         self.stream = stream
@@ -58,12 +57,12 @@ public class UploadTask : TPTransferTask {
             switch uploadDataType {
             case .File:
                 if let file = self.file {
-                    task = session?.uploadTaskWithRequest(request, fromFile: file)
+                    task = session?.uploadTask(with: request as URLRequest, fromFile: file as URL)
                 }
             case .Data:
-                task = session?.uploadTaskWithRequest(request, fromData: data)
+                task = session?.dataTask(with: request as URLRequest) as? URLSessionUploadTask
             case .Stream:
-                task = session?.uploadTaskWithStreamedRequest(request)
+                task = session?.uploadTask(withStreamedRequest: request as URLRequest)
                 break
             }
         }

@@ -49,12 +49,12 @@ public class Transaction {
 }
 
 extension Transaction {
-    public func progress(handler: ProgressHandler) -> Self {
+    public func progress(handler: @escaping ProgressHandler) -> Self {
         currentTaskGroup?.progressHandler = handler
         return self
     }
     
-    public func completed(handler: CompletionHandler) -> Self {
+    public func completed(handler: @escaping CompletionHandler) -> Self {
         currentTaskGroup?.completionHandler = handler
         return self
     }

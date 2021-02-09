@@ -22,36 +22,40 @@ public enum TPMethod : String {
     case PUT    = "PUT"
 }
 
-public typealias ProgressHandler = (completedBytes: Int64, totalBytes: Int64) -> ()
-public typealias CompletionHandler = (tasks: [TPTransferTask]) -> ()
-public typealias TransferCompletionHandler = (response: NSHTTPURLResponse?, json: AnyObject?, error: NSError?) -> ()
+public typealias ProgressHandler = (_ completedBytes: Int64, _ totalBytes: Int64) -> ()
+public typealias CompletionHandler = (_ tasks: [TPTransferTask]) -> ()
+public typealias TransferCompletionHandler = (_ response: HTTPURLResponse?, _ json: AnyObject?, _ error: NSError?) -> ()
 
-infix operator --> { associativity left precedence 160 }
+precedencegroup ToPrecedence {
+    associativity: left
+    higherThan: AdditionPrecedence
+}
+infix operator --> : ToPrecedence
 
 public func --> (left: TPTransferTask, right: TPTransferTask) -> TPTaskGroup {
     return TPTaskGroup(left: left, right: right, mode: .Serialization)
 }
 
 public func --> (left: TPTaskGroup, right: TPTransferTask) -> TPTaskGroup {
-    return left.append(right)
+    return left.append(task: right)
 }
 
-infix operator ||| { associativity left precedence 160 }
+infix operator ||| : ToPrecedence
 
 public func ||| (left: TPTransferTask, right: TPTransferTask) -> TPTaskGroup {
     return TPTaskGroup(left: left, right: right, mode: .Concurrency)
 }
 
 public func ||| (left: TPTaskGroup, right: TPTransferTask) -> TPTaskGroup {
-    return left.append(right)
+    return left.append(task: right)
 }
 
 // http boby builder
 func queryStringFromParams(params: [String: AnyObject]) -> String {
-    let paramsArray = convertParamsToArray(params)
-    var queryString = join("&", paramsArray.map{ "\($0)=\($1)" })
+    let paramsArray = convertParamsToArray(params: params)
+    var queryString = paramsArray.map{ "\($0)=\($1)" }.joined(separator: "&")//join("&", paramsArray.map{ "\($0)=\($1)" })
     
-    return queryString.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+    return queryString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
 }
 
 func convertParamsToArray(params: [String: AnyObject]) -> [(String, AnyObject)] {
@@ -60,14 +64,14 @@ func convertParamsToArray(params: [String: AnyObject]) -> [(String, AnyObject)] 
     for (key, value) in params {
         if let arrayValue = value as? NSArray {
             for nestedValue in arrayValue {
-                let dic = ["\(key)[]": nestedValue]
-                result += convertParamsToArray(dic)
+                let dic = ["\(key)[]": nestedValue as AnyObject]
+                result += convertParamsToArray(params: dic)
             }
         }
         else if let dicValue = value as? NSDictionary {
             for (nestedKey, nestedValue) in dicValue {
-                let dic = ["\(key)[\(nestedKey)]": nestedValue]
-                result += convertParamsToArray(dic)
+                let dic = ["\(key)[\(nestedKey)]": nestedValue as AnyObject]
+                result += convertParamsToArray(params: dic)
             }
         }
         else {

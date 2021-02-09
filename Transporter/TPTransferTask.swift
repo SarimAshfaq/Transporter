@@ -29,11 +29,11 @@ public class TPTransferTask : TPTask {
     var url: String
     var request: NSMutableURLRequest?
     var totalBytes: Int64 = 0
-    var session: NSURLSession?
+    var session: URLSession?
     var responseData: NSData?
     var jsonData: AnyObject? {
-        if let reponseData = responseData {
-            return NSJSONSerialization.JSONObjectWithData(reponseData, options: .AllowFragments, error: nil)
+        if let data = responseData {
+            return try? JSONSerialization.data(withJSONObject: data, options: .fragmentsAllowed) as AnyObject
         }
         return nil
     }
@@ -50,10 +50,10 @@ public class TPTransferTask : TPTask {
    
     func setup() {
         let requestUrl = NSURL(string: url)!
-        let request = NSMutableURLRequest(URL: requestUrl)
-        request.HTTPMethod = method.rawValue
-        request.HTTPShouldUsePipelining = HTTPShouldUsePipelining
-        request.HTTPShouldHandleCookies = HTTPShouldHandleCookies
+        let request = NSMutableURLRequest(url: requestUrl as URL)
+        request.httpMethod = method.rawValue
+        request.httpShouldUsePipelining = HTTPShouldUsePipelining
+        request.httpShouldHandleCookies = HTTPShouldHandleCookies
         request.allowsCellularAccess = allowsCellularAccess
         
         // append header
@@ -65,16 +65,16 @@ public class TPTransferTask : TPTask {
         // append http body
         if let params = params {
             if method == .GET {
-                let query = queryStringFromParams(params)
-                let newUrl = url.stringByAppendingString("?\(query)")
-                request.URL = NSURL(string: newUrl)
+                let query = queryStringFromParams(params: params)
+                let newUrl = url.appending("?\(query)")
+                request.url = NSURL(string: newUrl) as URL?
             }
         }
         
         self.request = request
     }
     
-    public func completed(handler: TransferCompletionHandler) -> Self {
+    public func completed(handler: @escaping TransferCompletionHandler) -> Self {
         completionHandler = handler
         return self
     }

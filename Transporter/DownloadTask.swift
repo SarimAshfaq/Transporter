@@ -9,7 +9,7 @@
 import Foundation
 
 public class DownloadTask : TPTransferTask {
-    var task: NSURLSessionDownloadTask?
+    var task: URLSessionDownloadTask?
     var destination: NSURL
     var movingError: NSError?
     
@@ -22,7 +22,7 @@ public class DownloadTask : TPTransferTask {
     override func setup() {
         super.setup()
         if let request = request {
-            task = session?.downloadTaskWithRequest(request)
+            task = session?.downloadTask(with: request as URLRequest)
         }
     }
     

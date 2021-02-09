@@ -39,17 +39,19 @@ public struct Transporter {
 }
 
 public extension Transporter {
-    static func handleEventsForBackgroundURLSection(identifier: String, completionHandler: () -> ()) {
+    static func handleEventsForBackgroundURLSection(identifier: String, completionHandler: @escaping () -> ()) {
         backgroundEventHandlers[identifier] = completionHandler
     }
 }
 
 internal extension Transporter {
-    static func sessionDidFinishEventsForBackgroundURLSession(session: NSURLSession) {
-        let identifier = session.configuration.identifier
+    static func sessionDidFinishEventsForBackgroundURLSession(session: URLSession) {
+        guard let identifier = session.configuration.identifier else {
+            return
+        }
         if let handler = backgroundEventHandlers[identifier] {
             handler()
-            backgroundEventHandlers.removeValueForKey(identifier)
+            backgroundEventHandlers.removeValue(forKey: identifier)
         }
     }
 }

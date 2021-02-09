@@ -29,7 +29,7 @@ Features
 **Quick example**
 
 ``` swift
-let path = NSBundle.mainBundle().pathForResource("bigfile", ofType: "zip")
+let path = Bundle.main.path(forResource: "bigFile", ofType: "zip")
 let fileUrl = NSURL(fileURLWithPath: path!)!
 
 let task = UploadTask(url: "http://server.com", file: fileUrl)
